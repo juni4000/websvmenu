@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { DefaultProvider, sha256, toHex, PubKey, bsv, TestWallet, Tx, toByteString } from "scrypt-ts";
 import './App.css';
 import { pvtkey } from './globals';
+import { broadcast } from './Broadcast';
 
 import {homepvtKey, homenetwork, compState} from './Home';
 //import { Signature } from 'typescript';
@@ -602,7 +603,8 @@ const Page06P2PK2P2PK: FC = () => {
       */
 
       //const txId = await provider.sendRawTransaction(newRawTX)
-      const txId = await provider.sendRawTransaction(rawTX)
+      //const txId = await provider.sendRawTransaction(rawTX)
+      const txId = await broadcast(rawTX, homenetwork)
 
       
       if(txId.length === 64)

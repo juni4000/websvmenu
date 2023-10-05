@@ -13,6 +13,7 @@ import './App.css';
 import { pvtkey } from './globals';
 
 import {homepvtKey, homenetwork, compState} from './Home';
+import { broadcast } from './Broadcast';
 
 import * as fs from 'fs';
 import { wait } from '@testing-library/user-event/dist/utils';

@@ -6,6 +6,7 @@ import './App.css';
 import { pvtkey } from './globals';
 
 import {homepvtKey, homenetwork, compState} from './Home';
+import { broadcast } from './Broadcast';
 
 //export let homepvtKey: string = "";
 //export let homenetwork = bsv.Networks.testnet;

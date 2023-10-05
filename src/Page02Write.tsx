@@ -1,9 +1,11 @@
 // src/components/Home.tsx
 import React, {FC} from 'react';
 import { useState, useRef, useEffect } from "react";
-import { DefaultProvider, sha256, toHex, PubKey, bsv, TestWallet, Tx, toByteString, ByteString } from "scrypt-ts";
+import { DefaultProvider, sha256, toHex, PubKey, bsv, TestWallet, Tx, toByteString, ByteString, hash256 } from "scrypt-ts";
 import './App.css';
 import { pvtkey } from './globals';
+//import * as request from 'request';
+import { broadcast } from './Broadcast';
 
 import {homepvtKey, homenetwork, compState} from './Home';
 
@@ -194,6 +196,258 @@ const Page02Write: FC = () => {
       writeToChain(0)
     }
   };
+
+  let txidBC = ''
+
+
+
+  async function broadcastHERE(tx: any): Promise <string>
+  {
+    //console.log(`Message received in worker: ${event.data}`);
+    //const url = new URL('https://www.example.com/path?query=value');
+    let poolID: number = 0;
+    let npools: number = 4
+    let TxHexBsv: string = tx;
+    let urlAdress01: string = 'https://api.whatsonchain.com/v1/bsv/main/tx/raw';
+    let urlAdress02: string = 'https://mapi.gorillapool.io/mapi/tx';
+    let urlAdress03: string = 'https://api.bitails.io/tx/broadcast';
+    let urlAdress04: string = 'https://api.bitails.io/tx/broadcast/multipart';
+    let txID: string = new bsv.Transaction(tx).id;
+
+
+    if(homenetwork === bsv.Networks.testnet)
+    {
+      urlAdress01 = 'https://api.whatsonchain.com/v1/bsv/test/tx/raw';
+      urlAdress02 = 'https://testnet-mapi.gorillapool.io/mapi/tx';
+      urlAdress03 = 'https://test-api.bitails.io/tx/broadcast';
+      urlAdress04 = 'https://test-api.bitails.io/tx/broadcast/multipart';
+    }
+
+    /////////////////////////////////////////////////
+    //JESUS is the LORD!!!
+    /////////////////////////////////////////////////
+
+    let url: URL;
+
+    console.log('pool id', poolID)
+
+    let TXJson;
+
+    switch(poolID)
+    {
+      case 0: url = new URL(urlAdress01);
+              TXJson = `{"txhex": "${TxHexBsv}" }`; 
+        break;
+      case 1: url = new URL(urlAdress02);
+              TXJson = `{"rawTx": "${TxHexBsv}" }`;
+          break;
+      case 2: url = new URL(urlAdress03);
+              TXJson = `{"raw": "${TxHexBsv}" }`
+        break;
+      default: url = new URL(urlAdress04);
+              TXJson = `{"raw": "${TxHexBsv}" }`
+        break;
+    }
+
+
+    let bcFinish = false
+    let cycle = 0
+    while(!bcFinish && cycle < npools * 2)
+    {
+        try {
+        
+          /*
+          if (poolID === 0) {
+            url = new URL(urlAdress01);
+          } else if (poolID === 1) {
+            url = new URL(urlAdress02);
+          }
+          else if (poolID === 2 ){
+            url = new URL(urlAdress03);
+          }
+          else{
+            url = new URL(urlAdress04);
+          }
+
+          */
+
+          console.log('URL', url)
+          /*
+
+          let TXJson = poolID === 0
+          ? `{"txhex": "${TxHexBsv}" }`
+          : `{"rawTx": "${TxHexBsv}" }`;
+
+          if(poolID === 2 || poolID === 3)
+          {
+            TXJson = `{"raw": "${TxHexBsv}" }`;
+            //TXJson = `{"raw": "[${TxHexBsv}]"}`;
+          }
+
+          */
+
+          let resp ='';
+          if(poolID === 3)
+          { 
+              //https://stackoverflow.com/questions/46640024/how-do-i-post-form-data-with-fetch-api
+              const formData = new FormData();
+
+              formData.append('raw', new Blob([Buffer.from(TxHexBsv, 'hex')]));
+              formData.append('filename', 'raw');
+   
+              const response = await fetch(url, {  
+                method: 'POST',
+                //body: content,
+                body: formData,
+                //headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}             
+              }).then(response=>response.text())//then(response=>response.json())
+              .then(data=>{
+                resp = data; 
+                //console.log(data); 
+              });
+          }
+          else
+          {
+              await fetch(url, {  
+                method: 'POST',
+                //body: content,
+                body: TXJson,
+                //headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'} 
+                headers: {
+                      'Content-Type': 'application/json',
+                      'accept': 'text/plain'
+                }
+
+              }).then(response=>response.text())//then(response=>response.json())
+              .then(data=>{
+                resp = data; 
+                //console.log(data); 
+              });
+          }
+                
+          if (resp.indexOf(txID) !== -1) {
+            
+            console.log('Sucess: ', resp);
+            bcFinish = true
+          } else {
+
+            bcFinish = false
+            console.log('Not Sucess: ', resp);
+          }
+
+        } catch (e) {
+          console.error(e);
+        }
+
+        cycle ++;
+        poolID ++;
+        poolID = poolID % npools;
+
+        console.log('Pool id: ', poolID)
+        
+      }
+
+      if(bcFinish)
+      {
+        return txID
+      }
+      else
+      {
+        return ''
+      }
+  }
+  
+  onmessage = async (event) => {
+
+    //console.log(`Message received in worker: ${event.data}`);
+    //const url = new URL('https://www.example.com/path?query=value');
+    let poolID: number = event.data[0];
+    let TxHexBsv: string = event.data[1];
+    let urlAdress: string = event.data[2];
+    let urlAdress02: string = event.data[3];
+    let urlAdress03: string = event.data[4];
+    let txID: string = event.data[5];
+
+
+
+    //console.log("\npoolID:", poolID); //não pode ser usada neste contexto;
+    //console.log("\nTxHexBsv:", TxHexBsv);
+    //console.log("\nurlAdress:", urlAdress);
+    //console.log("\nurlAdress02:", urlAdress02);
+    //console.log("\nurlAdress03:", urlAdress03);
+
+
+    /////////////////////////////////////////////////
+    //JESUS is the LORD!!!
+    /////////////////////////////////////////////////
+    
+    try {
+      let url: URL;
+
+
+      console.log('pool id', poolID)
+    
+      if (poolID === 0) {
+        url = new URL(urlAdress);
+      } else if (poolID === 1) {
+        url = new URL(urlAdress02);
+      }
+      else {
+        url = new URL(urlAdress03);
+      }
+
+      console.log('URL', url)
+
+      let TXJson = poolID === 0
+      ? `{"txhex": "${TxHexBsv}" }`
+      : `{"rawTx": "${TxHexBsv}" }`;
+
+          if(poolID === 2)
+      {
+        TXJson = `{"raw": "${TxHexBsv}" }`;
+        //TXJson = `{"raw": "[${TxHexBsv}]"}`;
+      }
+
+
+      let resp ='';
+      
+      const response = await fetch(url, {  
+        method: 'POST',
+        //body: content,
+        body: TXJson,
+        //headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'} 
+        headers: {
+              'Content-Type': 'application/json',
+              'accept': 'text/plain'
+        }
+    
+      }).then(response=>response.text())//then(response=>response.json())
+      .then(data=>{
+        resp = data; 
+        //console.log(data); 
+      });
+        
+    
+      if (resp.indexOf(txID) !== -1) {
+        console.log('Sucess: ', resp);
+
+        txidBC = txID
+      //  postMessage('OK');
+      } else {
+
+        console.log('Not Sucess: ', resp);
+        txidBC = ''
+        //console.log('error');
+      //  postMessage('error');
+      }
+
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+
+
 
   const writeToChain = async (amount: any) => {
 
@@ -606,6 +860,24 @@ const Page02Write: FC = () => {
       
       const txId = await provider.sendRawTransaction(rawTX)
 
+      //      let TxHexBsv: string = rawTX;
+      //TxHexDataSent: string = '';
+
+      //console.log('TxId send BE: ', hash256(toHex(rawTX)))
+      //console.log('TxId send LE: ', new bsv.Transaction(rawTX).id)
+
+      //let txId = new bsv.Transaction(rawTX).id
+
+  
+      
+      //console.log('TXID BC before: ', txidBC)
+      //await postMessage(dataHERE);
+
+      //console.log("TXID ASDFG: ", await broadcast(rawTX))
+      //console.log('TXID BC After: ', txidBC)
+
+      //const txId = await broadcast(rawTX, homenetwork)
+   
 
       if(txId.length === 64)
       {

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { DefaultProvider, sha256, toHex, PubKey, bsv, TestWallet, Tx, toByteString } from "scrypt-ts";
 import './App.css';
 import { pvtkey } from './globals';
+import { broadcast } from './Broadcast';
 
 const Page10Sig2QA: FC = () => {
 

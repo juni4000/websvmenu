@@ -6,7 +6,7 @@ import './App.css';
 import { pvtkey } from './globals';
 
 import {homepvtKey, homenetwork, compState} from './Home';
-
+import { broadcast } from './Broadcast';
 //export let homepvtKey: string = "";
 //export let homenetwork = bsv.Networks.testnet;
 //export let compState = true;
@@ -468,7 +468,8 @@ const Page05P2PKC: FC = () => {
 
       settxb(true);
       
-      const txId = await provider.sendRawTransaction(rawTX)
+      //const txId = await provider.sendRawTransaction(rawTX)
+      const txId = await broadcast(rawTX, homenetwork)
 
 
       if(txId.length === 64)

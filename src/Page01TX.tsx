@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { DefaultProvider, sha256, toHex, PubKey, bsv, TestWallet, Tx, toByteString } from "scrypt-ts";
 import './App.css';
 import { pvtkey } from './globals';
+import { broadcast } from './Broadcast';
 
 import {homepvtKey, homenetwork, compState} from './Home';
 
@@ -480,7 +481,8 @@ const Page01TX: FC = () => {
 
       console.log('\nNew UTXO: ', newUTXO)
       
-      const txId = await provider.sendRawTransaction(rawTX)
+      //const txId = await provider.sendRawTransaction(rawTX)
+      const txId = await broadcast(rawTX, homenetwork)
 
 
       if(txId.length === 64)
